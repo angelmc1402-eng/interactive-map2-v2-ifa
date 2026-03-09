@@ -2,92 +2,275 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Generador de 480 Mesas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HALL 2 - Interactive Map Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --verde-base: #2ecc71;
+        --verde-deep: #27ae60;
+        --verde-sport: #00ffb4;
+        --rojo-sold: #e74c3c;
+        --text-gray: #95a5a6;
+        --gris-coming-bg: rgba(189, 195, 199, 0.5);
+        --gris-coming-border: #bdc3c7;
+        --gris-coming-footer: #7f8c8d; 
+        --fuente: 'Inter', sans-serif;
+    }
+
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #f0f0f0; font-family: var(--fuente); }
+    
+    #viewport { 
+        width: 100vw; 
+        height: 100vh; 
+        overflow: auto; 
+        display: block;
+        -webkit-overflow-scrolling: touch; 
+    }
+
+    #container { 
+        position: relative; 
+        transform-origin: 0 0; 
+        transition: transform 0.2s ease-out; 
+        display: inline-block;
+        transform: translateZ(0);
+    }
+
+    img { display: block; image-rendering: high-quality; max-width: none; }
+
+    /* MESAS */
+    .mesa { 
+        position: absolute; border: 2px solid var(--verde-base); 
+        background: rgba(46, 204, 113, 0.25); box-sizing: border-box; 
+        z-index: 10; 
+        border-radius: 4px; cursor: pointer; 
+        transform: translateZ(0); 
+    }
+    
+    .mesa.commercial { border-color: #3498db; background: rgba(52, 152, 219, 0.25); }
+
+    .mesa.agotada {
+        background: rgba(231, 76, 60, 0.4) !important;
+        border-color: var(--rojo-sold) !important;
+        cursor: not-allowed; 
+    }
+
+    .mesa.coming-soon {
+        background: var(--gris-coming-bg) !important; 
+        border-color: var(--gris-coming-border) !important;      
+        cursor: not-allowed; 
+    }
+
+    /* Z-INDEX */
+    .mesa:hover, .mesa:active { 
+        z-index: 9999 !important; 
+        border-color: white; 
+        box-shadow: 0 0 20px rgba(255,255,255,0.5); 
+    }
+
+    /* TOOLTIP */
+    .custom-tooltip-wrapper {
+        position: absolute; bottom: 140%; left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        width: 420px; background: white; border-radius: 14px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        opacity: 0; pointer-events: none; transition: all 0.2s ease;
+        overflow: hidden; display: flex; flex-direction: column;
+        z-index: 10000; 
+    }
+
+    .mesa:hover .custom-tooltip-wrapper,
+    .mesa:active .custom-tooltip-wrapper { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .tooltip-row { display: flex; border-bottom: 1px solid #edf2f7; background: white; }
+    .tooltip-cell { flex: 1; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; }
+    .tooltip-cell:first-child { border-right: 1px solid #edf2f7; }
+    .tooltip-label { color: var(--text-gray); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .tooltip-value { font-size: 26px; font-weight: 800; color: #2d3748; }
+    
+    .tooltip-footer { padding: 14px; font-size: 18px; font-weight: 700; color: white; background: var(--verde-deep); display: flex; justify-content: center; }
+    
+    .mesa.agotada .tooltip-footer { background: var(--rojo-sold); }
+    .mesa.commercial .tooltip-footer { background: #3498db; }
+    .mesa.coming-soon .tooltip-footer { background: var(--gris-coming-footer) !important; letter-spacing: 2px; }
+
+    /* CONTROLES */
+    .controls-wrapper { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 10000; }
+    .joystick, .zoom-pill { background: white; padding: 12px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .joystick { display: grid; grid-template-columns: repeat(3, 45px); gap: 5px; }
+    .zoom-pill { display: flex; gap: 8px; }
+    .nav-btn, .action-btn { width: 45px; height: 45px; border: none; background: #f0f0f0; border-radius: 10px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .nav-btn:hover, .action-btn:hover { background: var(--verde-base); color: white; }
+</style>
 </head>
-<body style="font-family: sans-serif; padding: 40px; text-align: center; background: #f0f0f0;">
-    <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto;">
-        <h2>🧩 Generador Automático de Mapas</h2>
-        <p style="color: #666; margin-bottom: 20px;">
-            Aplica la geometría exacta de DIECAST-A al resto de 14 bloques para generar las 480 mesas sin perder ni un decimal de precisión.
-        </p>
-        <button onclick="generar()" style="padding: 15px 30px; font-size: 16px; font-weight: bold; background: #2ecc71; color: white; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.2s;">
-            📋 Copiar las 480 Mesas
-        </button>
-        <textarea id="resultado" style="width: 100%; height: 200px; margin-top: 20px; font-family: monospace; border: 2px solid #ddd; padding: 10px; border-radius: 8px;"></textarea>
+<body>
+
+    <div id="viewport">
+        <div id="container">
+            <img id="map-img" src="Hall 2.png" alt="Map Hall 2">
+            <div id="capa-mesas"></div> 
+        </div>
     </div>
 
-    <script>
-    // La geometría exacta extraída de tu bloque DIECAST-A
-    const offsets = [
-        {t:0.0000, l:0.0000, w:0.34, h:1.38},
-        {t:-1.4188, l:0.0000, w:0.34, h:1.38},
-        {t:-1.8005, l:0.3185, w:1.17, h:0.41},
-        {t:-1.8007, l:1.5085, w:1.17, h:0.41},
-        {t:-1.8007, l:3.8884, w:1.17, h:0.41},
-        {t:-1.8007, l:5.0884, w:1.17, h:0.41},
-        {t:-1.8007, l:6.2784, w:1.17, h:0.41},
-        {t:-1.8007, l:7.4684, w:1.17, h:0.41},
-        {t:-1.8007, l:8.6584, w:1.17, h:0.41},
-        {t:-1.8007, l:9.8484, w:1.17, h:0.41},
-        {t:-1.8008, l:11.0197, w:1.17, h:0.41},
-        {t:-1.8008, l:12.2197, w:1.17, h:0.41},
-        {t:-1.8008, l:13.4197, w:1.17, h:0.41},
-        {t:-1.8008, l:14.6097, w:1.17, h:0.41},
-        {t:-1.8008, l:15.7997, w:1.17, h:0.41},
-        {t:-1.8008, l:16.9897, w:1.17, h:0.41},
-        {t:-1.4108, l:18.1397, w:0.34, h:1.38},
-        {t:-0.0008, l:18.1396, w:0.34, h:1.38},
-        {t:1.3707, l:16.9857, w:1.17, h:0.41},
-        {t:1.3707, l:15.7957, w:1.17, h:0.41},
-        {t:1.3707, l:13.4157, w:1.17, h:0.41},
-        {t:1.3707, l:12.2257, w:1.17, h:0.41},
-        {t:1.3707, l:11.0357, w:1.17, h:0.41},
-        {t:1.3707, l:9.8357, w:1.17, h:0.41},
-        {t:1.3706, l:8.6456, w:1.17, h:0.41},
-        {t:1.3706, l:7.4656, w:1.17, h:0.41},
-        {t:1.3706, l:6.2656, w:1.17, h:0.41},
-        {t:1.3706, l:5.0756, w:1.17, h:0.41},
-        {t:1.3706, l:3.8856, w:1.17, h:0.41},
-        {t:1.3706, l:2.6956, w:1.17, h:0.41},
-        {t:1.3706, l:1.5056, w:1.17, h:0.41},
-        {t:1.3706, l:0.3156, w:1.17, h:0.41}
-    ];
+    <div class="controls-wrapper">
+        <div class="joystick">
+            <button class="nav-btn" style="grid-column:2" onclick="move('up')">↑</button>
+            <button class="nav-btn" style="grid-column:1; grid-row:2" onclick="move('left')">←</button>
+            <button class="nav-btn" style="grid-column:3; grid-row:2" onclick="move('right')">→</button>
+            <button class="nav-btn" style="grid-column:2; grid-row:3" onclick="move('down')">↓</button>
+        </div>
+        <div class="zoom-pill">
+            <button class="action-btn" onclick="zoom(1.3)">+</button>
+            <button class="action-btn" onclick="zoom(0.7)">-</button>
+            <button class="action-btn" style="width:auto; padding:0 15px; font-size:11px;" onclick="fit()">FIT</button>
+        </div>
+    </div>
 
-    // Los puntos base de cada bloque que proporcionaste
-    const bases = {
-        "DIECAST-A": {t: 30.9764, l: 15.8599},
-        "DIECAST-B": {t: 30.9856, l: 38.0995},
-        "DIECAST-C": {t: 42.9463, l: 15.8598},
-        "DIECAST-D": {t: 42.9656, l: 38.0995},
-        "DIECAST-E": {t: 50.3661, l: 15.8597},
-        "DIECAST-F": {t: 50.3655, l: 38.0995},
-        "DIECAST-G": {t: 62.3285, l: 15.8597},
-        "DIECAST-H": {t: 62.3454, l: 38.0995},
-        "DIECAST-I": {t: 68.5353, l: 38.0995},
-        "FIGURES-A": {t: 42.8238, l: 58.8594},
-        "FIGURES-B": {t: 50.4237, l: 58.8593},
-        "FIGURES-C": {t: 62.2738, l: 58.8593},
-        "FIGURES-D": {t: 68.4537, l: 58.8593},
-        "MANGACOM-A": {t: 83.6130, l: 38.8210},
-        "MANGACOM-B": {t: 83.6110, l: 58.7009}
-    };
+<script>
+    let scale = 1;
+    const container = document.getElementById('container');
+    const viewport = document.getElementById('viewport');
+    const mapImg = document.getElementById('map-img');
+    
+    // OPTIMIZACIÓN 1: El diccionario de memoria
+    const diccionarioMesas = new Map();
 
-    function generar() {
-        let html = "";
-        for (const [block, base] of Object.entries(bases)) {
-            offsets.forEach((off, i) => {
-                const top = (base.t + off.t).toFixed(4);
-                const left = (base.l + off.l).toFixed(4);
-                html += `<div class="mesa" data-info="${block}-${i+1}" style="width: ${off.w}%; height: ${off.h}%; top: ${top}%; left: ${left}%;"></div>\n`;
+    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSuA_zpd7Ays5Xt9MDPQzkzCbxj8s0SaDgQGhuxcthtMl59F3H9oWipgKfsUmbiDloop2b43rqoq8CG/pub?gid=0&single=true&output=csv';
+
+    async function cargarMesas() {
+        try {
+            const respHTML = await fetch('mesas.html?v=' + new Date().getTime());
+            const html = await respHTML.text();
+            document.getElementById('capa-mesas').innerHTML = html;
+            
+            const mesas = document.querySelectorAll('.mesa');
+            mesas.forEach(m => {
+                const info = m.getAttribute('data-info') || ""; 
+                
+                // Guardamos la mesa en memoria para no buscarla en el HTML luego
+                diccionarioMesas.set(info, m);
+
+                const parts = info.split('-');
+                let section = parts.length >= 2 ? parts[0] + "-" + parts[1] : info;
+                let tableNum = parts.length >= 3 ? parts[2] : "0";
+
+                let footerText = "";
+                let displaySection = section;
+
+                // DETECTAR COMING SOON
+                if (info.includes("MANGACOM") || info.includes("FIGURES")) {
+                    if (info.includes("MANGACOM")) displaySection = "Manga & Comic - " + parts[1];
+                    if (info.includes("FIGURES")) displaySection = "Figures & Dolls - " + parts[1];
+
+                    m.classList.add('coming-soon');
+                    footerText = "COMING SOON";
+
+                } else {
+                    // LÓGICA DIECAST
+                    let type = "Collector Table";
+                    let price = "70,00 €";
+
+                    // OPTIMIZACIÓN 2: Expresión regular para incluir A, B, C y D de golpe
+                    if (/DIECAST-(A|B|C|D)/.test(info)) {
+                        type = "Commercial Table";
+                        price = "175,00 €";
+                        m.classList.add('commercial'); 
+                    }
+
+                    const isAgotada = m.classList.contains('agotada');
+                    footerText = isAgotada ? "SOLD OUT" : `${type}  •  ${price}`;
+                }
+
+                m.innerHTML = `
+                    <div class="custom-tooltip-wrapper">
+                        <div class="tooltip-row">
+                            <div class="tooltip-cell"><span class="tooltip-label">Section</span><span class="tooltip-value">${displaySection}</span></div>
+                            <div class="tooltip-cell"><span class="tooltip-label">Table</span><span class="tooltip-value">${tableNum}</span></div>
+                        </div>
+                        <div class="tooltip-footer">${footerText}</div>
+                    </div>`;
             });
-        }
-        
-        const txt = document.getElementById('resultado');
-        txt.value = html;
-        txt.select();
-        document.execCommand('copy');
-        alert("¡Las 480 mesas se han copiado al portapapeles!\n\nYa puedes pegarlas limpiamente en tu archivo mesas.html.");
+            
+            // Cargar el Excel por primera vez ahora que ya existen las mesas
+            await sincronizarConExcel();
+
+            if (mapImg.complete) fit();
+            else mapImg.onload = fit;
+
+        } catch (e) { console.error("Error:", e); }
     }
-    </script>
+
+    async function sincronizarConExcel() {
+        try {
+            const urlFinal = URL_CSV + (URL_CSV.includes('?') ? '&' : '?') + 'cache_ignore=' + Date.now();
+            const respuesta = await fetch(urlFinal, { method: 'GET', mode: 'cors', cache: 'no-cache' });
+            const texto = await respuesta.text();
+            const filas = texto.split(/\r?\n/);
+
+            filas.forEach((fila, index) => {
+                if (index === 0 || !fila.trim()) return;
+                const columnas = fila.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                if (columnas.length >= 3) {
+                    const estado = columnas[1].replace(/["']/g, "").trim().toUpperCase(); 
+                    const idMesa = columnas[2].replace(/["']/g, "").trim(); 
+                    
+                    // OPTIMIZACIÓN 3: Llamamos a la memoria, 100 veces más rápido que querySelector
+                    const mesaDiv = diccionarioMesas.get(idMesa);
+                    
+                    if (mesaDiv) {
+                        // Como estas mesas están "Coming Soon", las ignoramos del "Sold Out" visualmente
+                        if (mesaDiv.classList.contains('coming-soon')) return;
+
+                        if (estado.includes("VENDIDA") || estado.includes("SOLD")) {
+                            mesaDiv.classList.add('agotada');
+                            // Actualizamos el faldón a SOLD OUT si no lo estaba
+                            mesaDiv.querySelector('.tooltip-footer').innerText = "SOLD OUT";
+                        } else {
+                            mesaDiv.classList.remove('agotada');
+                            // Nota: Si pasara de VENDIDA a LIBRE de nuevo, se quedaría el texto SOLD OUT en esta versión,
+                            // Pero normalmente en eventos nadie "devuelve" la mesa en vivo.
+                        }
+                    }
+                }
+            });
+        } catch (err) { console.error("Error:", err); }
+    }
+
+    function zoom(f) { 
+        let newScale = scale * f;
+        if (newScale >= 0.01 && newScale <= 3.0) {
+            scale = newScale;
+            container.style.transform = `scale(${scale})`; 
+        }
+    }
+
+    function move(dir) {
+        const step = 400;
+        if(dir === 'up') viewport.scrollTop -= step;
+        if(dir === 'down') viewport.scrollTop += step;
+        if(dir === 'left') viewport.scrollLeft -= step;
+        if(dir === 'right') viewport.scrollLeft += step;
+    }
+
+    function fit() { 
+        const imgWidth = mapImg.naturalWidth || 5000;
+        scale = (window.innerWidth / imgWidth) * 0.6; 
+        
+        if(scale < 0.01) scale = 0.01;
+        container.style.transform = `scale(${scale})`;
+        
+        viewport.scrollTo(
+            (container.offsetWidth * scale - window.innerWidth) / 2, 
+            (container.offsetHeight * scale - window.innerHeight) / 2
+        );
+    }
+
+    window.onload = cargarMesas;
+    window.onresize = fit;
+    
+    // El diccionario permite que este polling sea extremadamente ligero para la CPU
+    setInterval(sincronizarConExcel, 120000);
+</script>
 </body>
 </html>
