@@ -168,12 +168,12 @@
                 } else {
                     // LÓGICA DIECAST
                     let type = "Collector Table";
-                    let price = "70,00 €";
+                    let price = "100,00 €";
 
                     // OPTIMIZACIÓN 2: Expresión regular para incluir A, B, C y D de golpe
                     if (/DIECAST-(A|B|C|D)/.test(info)) {
                         type = "Commercial Table";
-                        price = "175,00 €";
+                        price = "250,00 €";
                         m.classList.add('commercial'); 
                     }
 
